@@ -1,0 +1,26 @@
+{
+  "name": "masterro/searchable",
+  "description": "Simple fulltext search though Eloquent models",
+  "keywords": [
+    "laravel",
+    "search",
+    "global search",
+    "fulltext"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "MasterRO",
+      "email": "igoshin18@gmail.com"
+    }
+  ],
+  "require": {
+    "illuminate/pagination": "5.*",
+    "illuminate/support": "5.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "MasterRO\\Searchable\\": "src/"
+    }
+  }
+}
