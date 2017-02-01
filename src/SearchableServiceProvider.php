@@ -4,7 +4,7 @@ namespace MasterRO\Searchable;
 
 use Illuminate\Support\ServiceProvider;
 
-class SearchableProvider extends ServiceProvider
+class SearchableServiceProvider extends ServiceProvider
 {
 	/**
 	 * Register the application services.
