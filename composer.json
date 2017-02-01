@@ -15,6 +15,7 @@
     }
   ],
   "require": {
+    "php": "^7.0",
     "illuminate/pagination": "5.*",
     "illuminate/support": "5.*"
   },
