@@ -139,8 +139,7 @@ class Searchable
 			$sql = $this->addIdsFilter($ids, $sql);
 		}
 
-		$sql .= ' ORDER BY score 
-					LIMIT ' . $this->per_page * count(self::$models);
+		$sql .= ' LIMIT ' . $this->per_page * count(self::$models);
 
 		return $sql;
 	}
