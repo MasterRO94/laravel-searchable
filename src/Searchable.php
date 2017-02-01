@@ -125,11 +125,9 @@ class Searchable
 		}
 
 		$fields = $model::searchable();
-		$select_fields = ['id'] + $fields;
-		$select_fields_str = implode(', ', $select_fields);
 		$fields_str = implode(', ', $fields);
 
-		$sql = "SELECT $select_fields_str, 
+		$sql = "SELECT *, 
 						MATCH ($fields_str) AGAINST ('*$q*' IN BOOLEAN MODE) as score,
 						(
 							SELECT COUNT(*) FROM {$model->getTable()} WHERE MATCH ($fields_str) AGAINST ('*$q*' IN BOOLEAN MODE)
