@@ -69,6 +69,11 @@ class Searchable
 	{
 		$this->page = request('page') ?? 1;
 		$this->per_page = $per_page;
+		$q = $this->clearQuery($q);
+
+		if (mb_strlen($q) < 3) {
+			throw new TooShortQueryException("Filtered search query must be at least 3 characters.");
+		}
 
 		foreach (static::searchable() as $model_class) {
 			$model = new $model_class;
@@ -127,15 +132,13 @@ class Searchable
 		$fields = $model::searchable();
 		$fields_str = implode(', ', $fields);
 
-		$q = preg_replace('\-+', ' ', $q);
-
 		$sql = "SELECT *, 
-						MATCH ($fields_str) AGAINST ('$q*' IN BOOLEAN MODE) as score,
+						MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE) as score,
 						(
-							SELECT COUNT(*) FROM {$model->getTable()} WHERE MATCH ($fields_str) AGAINST ('$q*' IN BOOLEAN MODE)
+							SELECT COUNT(*) FROM {$model->getTable()} WHERE MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE)
 						) as total
 							FROM {$model->getTable()} 
-								WHERE MATCH ($fields_str) AGAINST ('$q*' IN BOOLEAN MODE)";
+								WHERE MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE)";
 
 		if (isset($ids) && $ids->count()) {
 			$sql = $this->addIdsFilter($ids, $sql);
@@ -164,12 +167,34 @@ class Searchable
 				continue;
 			}
 
-			$sql .= " OR id IN ($ids_str )";
+			$sql .= " OR id IN ($ids_str)";
 		}
 		$sql .= ')';
 
 		return $sql;
 	}
 
+
+	/**
+	 * @param $q
+	 * @return mixed
+	 */
+	protected function clearQuery($q)
+	{
+		// Remove duplicate special chars
+		$q = preg_replace('/\-+/', '-', $q);
+		$q = preg_replace('/\++/', '+', $q);
+		$q = preg_replace('/\*+/', '*', $q);
+
+		//remove special chars groups
+		$q = preg_replace('/((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s/', ' ', $q);
+
+		// remove duplicate spaces
+		$q = preg_replace('/\s+/', ' ', $q);
+
+		$q = trim(rtrim($q, '*-+'));
+
+		return "$q*";
+	}
 
 }
