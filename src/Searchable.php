@@ -186,8 +186,8 @@ class Searchable
 		$q = preg_replace('/\++/', '+', $q);
 		$q = preg_replace('/\*+/', '*', $q);
 
-		//remove special chars groups
-		$q = preg_replace('/((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s/', ' ', $q);
+		//remove special chars
+		$q = preg_replace('/(((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s)|([\~\@\"\<\>])/', ' ', $q);
 
 		// remove duplicate spaces
 		$q = preg_replace('/\s+/', ' ', $q);
