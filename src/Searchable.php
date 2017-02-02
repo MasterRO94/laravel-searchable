@@ -127,13 +127,15 @@ class Searchable
 		$fields = $model::searchable();
 		$fields_str = implode(', ', $fields);
 
+		$q = preg_replace('\-+', ' ', $q);
+
 		$sql = "SELECT *, 
-						MATCH ($fields_str) AGAINST ('*$q*' IN BOOLEAN MODE) as score,
+						MATCH ($fields_str) AGAINST ('$q*' IN BOOLEAN MODE) as score,
 						(
-							SELECT COUNT(*) FROM {$model->getTable()} WHERE MATCH ($fields_str) AGAINST ('*$q*' IN BOOLEAN MODE)
+							SELECT COUNT(*) FROM {$model->getTable()} WHERE MATCH ($fields_str) AGAINST ('$q*' IN BOOLEAN MODE)
 						) as total
 							FROM {$model->getTable()} 
-								WHERE MATCH ($fields_str) AGAINST ('*$q*' IN BOOLEAN MODE)";
+								WHERE MATCH ($fields_str) AGAINST ('$q*' IN BOOLEAN MODE)";
 
 		if (isset($ids) && $ids->count()) {
 			$sql = $this->addIdsFilter($ids, $sql);
