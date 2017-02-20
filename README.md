@@ -8,7 +8,7 @@ This is a small Laravel >= 5 package that allows you to make a global search tho
 From the command line, run:
 
 ```
-composer require masterro/searchable
+composer require masterro/searchable dev-php5
 ```
 
 ### Step 2: Service Provider
