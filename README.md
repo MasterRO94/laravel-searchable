@@ -11,6 +11,12 @@ From the command line, run:
 composer require masterro/searchable
 ```
 
+#### Notice! Master branch requires PHP7. For using with PHP5 use branch `php5`:
+
+```
+composer require masterro/searchable dev-php5
+```
+
 ### Step 2: Service Provider
 
 For your Laravel app, open `config/app.php` and, within the `providers` array, append:
