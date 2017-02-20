@@ -45,7 +45,7 @@ class Searchable
 	 * Gel collection of models that should be searched
 	 * @return array
 	 */
-	public static function searchable(): array
+	public static function searchable()
 	{
 		return static::$models;
 	}
@@ -67,7 +67,7 @@ class Searchable
 	 */
 	public function search($q, $per_page = 15)
 	{
-		$this->page = request('page') ?? 1;
+		$this->page = request('page') ?: 1;
 		$this->per_page = $per_page;
 		$q = $this->clearQuery($q);
 
@@ -155,7 +155,7 @@ class Searchable
 	 * @param $sql
 	 * @return string
 	 */
-	protected function addIdsFilter($ids, $sql): string
+	protected function addIdsFilter($ids, $sql)
 	{
 		$first_loop = true;
 		$sql .= ' AND (id IN ';

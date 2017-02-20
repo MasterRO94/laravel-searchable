@@ -7,5 +7,5 @@ interface SearchableContract
 	/**
 	 * @return array
 	 */
-	public static function searchable(): array;
+	public static function searchable();
 }
