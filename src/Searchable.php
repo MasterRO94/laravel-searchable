@@ -126,11 +126,11 @@ class Searchable
 		}
 
 		if (method_exists($model, 'filterSearchResults')) {
-			$ids = $model->filterSearchResults($model->query())->pluck('id');
+			$ids = $model->filterSearchResults($model->query());
 
-			if (!$ids->count()) {
-				return null;
-			}
+			if (!$ids) return false;
+
+			if (!with($ids = $ids->pluck('id'))->count()) return false;
 		}
 
 		$fields = $model::searchable();
