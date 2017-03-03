@@ -101,9 +101,9 @@ class Searchable
 	 */
 	protected function getResults($model, $query)
 	{
-		$results = collect(DB::select($query))->map(function ($item) use ($model) {
+		$results = $query ? collect(DB::select($query))->map(function ($item) use ($model) {
 			return (new $model)->forceFill((array)$item);
-		});
+		}) : collect();
 
 		if ($results->count()) {
 			$this->total += $results->first()->total;
@@ -127,6 +127,9 @@ class Searchable
 
 		if (method_exists($model, 'filterSearchResults')) {
 			$ids = $model->filterSearchResults($model->query())->pluck('id');
+			if (!$ids->count()) {
+				return null;
+			}
 		}
 
 		$fields = $model::searchable();
@@ -140,7 +143,7 @@ class Searchable
 							FROM {$model->getTable()} 
 								WHERE MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE)";
 
-		if (isset($ids) && $ids->count()) {
+		if (isset($ids)) {
 			$sql = $this->addIdsFilter($ids, $sql);
 		}
 
