@@ -117,7 +117,7 @@ class Searchable
 	/**
 	 * @param $model
 	 * @param $q
-	 * @return string
+	 * @return string|bool
 	 */
 	protected function getQuery($model, $q)
 	{
@@ -126,10 +126,11 @@ class Searchable
 		}
 
 		if (method_exists($model, 'filterSearchResults')) {
-			$ids = $model->filterSearchResults($model->query())->pluck('id');
-			if (!$ids->count()) {
-				return null;
-			}
+			$ids = $model->filterSearchResults($model->query());
+
+			if (!$ids) return false;
+
+			if (!with($ids = $ids->pluck('id'))->count()) return false;
 		}
 
 		$fields = $model::searchable();
