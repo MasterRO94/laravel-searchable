@@ -63,7 +63,7 @@ class Searchable
 
 		$this->mode = $this->config['use_boolean_mode'] ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
 
-		if ($this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
+		if (!$this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
 			$this->mode .= ' WITH QUERY EXPANSION';
 		}
 	}
