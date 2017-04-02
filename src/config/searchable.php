@@ -15,7 +15,7 @@ return [
 
 
 	/**
-	 * Allow using "+" and "-" to
+	 * Allow using "+" and "-" in boolean mode
 	 */
 	'allow_operators' => true,
 
