@@ -11,14 +11,8 @@ class SearchableServiceProvider extends ServiceProvider
 	 */
 	public function boot()
 	{
-		dump(
-			[
-				__DIR__ . '/config/searchable.php', config_path('searchable.php')
-			]
-		);
-
 		$this->publishes([
-			__DIR__ . '/config/searchable.php', config_path('searchable.php')
+			__DIR__ . '/config/searchable.php' => config_path('searchable.php')
 		]);
 	}
 
