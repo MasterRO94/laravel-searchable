@@ -40,6 +40,34 @@ class Searchable
 	 */
 	protected $per_page = 15;
 
+	/**
+	 * @var array
+	 */
+	protected $config;
+
+	/**
+	 * @var string
+	 */
+	protected $mode;
+
+
+	/**
+	 * Searchable constructor.
+	 *
+	 * Define configs and globals
+	 *
+	 */
+	public function __construct()
+	{
+		$this->config = config('searchable');
+
+		$this->mode = $this->config['use_boolean_mode'] ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
+
+		if ($this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
+			$this->mode .= ' WITH QUERY EXPANSION';
+		}
+	}
+
 
 	/**
 	 * Gel collection of models that should be searched
@@ -106,7 +134,7 @@ class Searchable
 		}) : collect();
 
 		if ($results->count()) {
-			$this->total += $results->first()->total;
+			$this->total += $results->count();
 			$this->total_results = $results->merge($this->total_results);
 		}
 
@@ -137,12 +165,9 @@ class Searchable
 		$fields_str = implode(', ', $fields);
 
 		$sql = "SELECT *, 
-						MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE) as score,
-						(
-							SELECT COUNT(*) FROM {$model->getTable()} WHERE MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE)
-						) as total
+						MATCH ($fields_str) AGAINST ('$q' $this->mode) as score
 							FROM {$model->getTable()} 
-								WHERE MATCH ($fields_str) AGAINST ('$q' IN BOOLEAN MODE)";
+								WHERE MATCH ($fields_str) AGAINST ('$q' $this->mode)";
 
 		if (isset($ids)) {
 			$sql = $this->addIdsFilter($ids, $sql);
@@ -198,7 +223,7 @@ class Searchable
 
 		$q = trim(rtrim($q, '*-+'));
 
-		return "$q*";
+		return "*$q*";
 	}
 
 }
