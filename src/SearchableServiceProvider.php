@@ -14,10 +14,6 @@ class SearchableServiceProvider extends ServiceProvider
 		$this->publishes([
 			__DIR__ . '/config/searchable.php', config_path('searchable.php')
 		]);
-
-		$this->mergeConfigFrom(
-			__DIR__ . '/config/searchable.php', 'searchable'
-		);
 	}
 
 
@@ -29,5 +25,9 @@ class SearchableServiceProvider extends ServiceProvider
 	public function register()
 	{
 		$this->app->singleton(Searchable::class);
+
+		$this->mergeConfigFrom(
+			__DIR__ . '/config/searchable.php', 'searchable'
+		);
 	}
 }
