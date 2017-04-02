@@ -13,4 +13,10 @@ return [
 	 */
 	'use_query_expansion' => true,
 
+
+	/**
+	 * Allow using "+" and "-" to
+	 */
+	'allow_operators' => true,
+
 ];

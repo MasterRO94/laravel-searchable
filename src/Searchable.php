@@ -210,18 +210,23 @@ class Searchable
 	 */
 	protected function clearQuery($q)
 	{
-		// Remove duplicate special chars
-		$q = preg_replace('/\-+/', '-', $q);
-		$q = preg_replace('/\++/', '+', $q);
-		$q = preg_replace('/\*+/', '*', $q);
+		if ($this->config['use_boolean_mode'] && $this->config['allow_operators']) {
+			// Remove duplicate special chars
+			$q = preg_replace('/\-+/', '-', $q);
+			$q = preg_replace('/\++/', '+', $q);
+			$q = preg_replace('/\*+/', '*', $q);
 
-		//remove special chars
-		$q = preg_replace('/(((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s)|([\~\@\"\<\>\(\)])/', ' ', $q);
+			//remove special chars
+			$q = preg_replace('/(((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s)|([\~\@\"\<\>\(\)])/', ' ', $q);
+		} else {
+			//remove special chars
+			$q = preg_replace('/\+\-\"\<\>\(\)\~\*/', ' ', $q);
+		}
 
 		// remove duplicate spaces
 		$q = preg_replace('/\s+/', ' ', $q);
 
-		$q = trim(rtrim($q, '*-+'));
+		$q = trim(trim($q, '*-+'));
 
 		return "*$q*";
 	}
