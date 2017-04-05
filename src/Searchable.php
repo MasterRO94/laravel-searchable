@@ -8,7 +8,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Class Searchable
- *
  * Simple fulltext search through Eloquent models
  *
  * @package App\Modules
@@ -53,9 +52,7 @@ class Searchable
 
 	/**
 	 * Searchable constructor.
-	 *
 	 * Define configs and globals
-	 *
 	 */
 	public function __construct()
 	{
@@ -63,7 +60,7 @@ class Searchable
 
 		$this->mode = $this->config['use_boolean_mode'] ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
 
-		if (!$this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
+		if (! $this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
 			$this->mode .= ' WITH QUERY EXPANSION';
 		}
 	}
@@ -71,6 +68,7 @@ class Searchable
 
 	/**
 	 * Gel collection of models that should be searched
+	 *
 	 * @return array
 	 */
 	public static function searchable(): array
@@ -91,11 +89,16 @@ class Searchable
 	/**
 	 * @param $q
 	 * @param int $per_page
-	 * @return Searchable|LengthAwarePaginator
+	 * @param null $request
+	 *
+	 * @return LengthAwarePaginator|Searchable
+	 * @throws TooShortQueryException
 	 */
-	public function search($q, $per_page = 15)
+	public function search($q, $per_page = 15, $request = null)
 	{
-		$this->page = request('page') ?? 1;
+		$request = $request ?? request();
+
+		$this->page = $request->get('page') ?? 1;
 		$this->per_page = $per_page;
 		$q = $this->clearQuery($q);
 
@@ -106,7 +109,7 @@ class Searchable
 		foreach (static::searchable() as $model_class) {
 			$model = new $model_class;
 
-			if (!is_a($model, SearchableContract::class)) continue;
+			if (! is_a($model, SearchableContract::class)) continue;
 
 			$this->getResults(
 				$model,
@@ -125,6 +128,7 @@ class Searchable
 	/**
 	 * @param $model
 	 * @param $query
+	 *
 	 * @return Searchable|Collection
 	 */
 	protected function getResults($model, $query)
@@ -145,6 +149,7 @@ class Searchable
 	/**
 	 * @param $model
 	 * @param $q
+	 *
 	 * @return string
 	 */
 	protected function getQuery($model, $q)
@@ -156,9 +161,9 @@ class Searchable
 		if (method_exists($model, 'filterSearchResults')) {
 			$ids = $model->filterSearchResults($model->query());
 
-			if (!$ids) return false;
+			if (! $ids) return false;
 
-			if (!with($ids = $ids->pluck('id'))->count()) return false;
+			if (! with($ids = $ids->pluck('id'))->count()) return false;
 		}
 
 		$fields = $model::searchable();
@@ -182,6 +187,7 @@ class Searchable
 	/**
 	 * @param $ids
 	 * @param $sql
+	 *
 	 * @return string
 	 */
 	protected function addIdsFilter($ids, $sql): string
@@ -206,6 +212,7 @@ class Searchable
 
 	/**
 	 * @param $q
+	 *
 	 * @return mixed
 	 */
 	protected function clearQuery($q)
