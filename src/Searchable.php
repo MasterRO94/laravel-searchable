@@ -227,7 +227,7 @@ class Searchable
 			$q = preg_replace('/(((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s)|([\~\@\"\<\>\(\)])/', ' ', $q);
 		} else {
 			//remove special chars
-			$q = preg_replace('/[\+\-\"\<\>\(\)\~\*]/', ' ', $q);
+			$q = preg_replace('/[\+\-\"\<\>\(\)\~\*\@]/', ' ', $q);
 		}
 
 		// remove duplicate spaces
