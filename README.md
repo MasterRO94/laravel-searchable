@@ -66,3 +66,20 @@ public function search(Request $request, Searchable $searchable)
     return view('search.index')->with('results', $searchable->search($query));
 }
 ```
+
+Search results can be filtered by adding the `filterSearchResults()` in your model
+```php
+class User extends Model implements SearchableContract
+{
+    public function posts() {
+        return $this->hasMany(Post::class);
+    }
+
+    public function filterSearchResults($query) {
+        return $query->whereHas('posts', function ($query) {
+            $query->where('is_published', true);
+        });
+    }
+}
+```
+> The example code above will filter the search results and will only return users with posts that are published.
