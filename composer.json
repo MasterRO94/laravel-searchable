@@ -10,19 +10,30 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "MasterRO",
+      "name": "Roman Ihoshyn",
       "email": "igoshin18@gmail.com"
     }
   ],
   "require": {
-    "php": "^7.0",
-    "illuminate/pagination": "5.*",
-    "illuminate/support": "5.*",
-    "illuminate/database": "5.*"
+    "php": "^7.1",
+    "illuminate/pagination": "5.*|^6.0|^7.0",
+    "illuminate/support": "5.*|^6.0|^7.0",
+    "illuminate/database": "5.*|^6.0|^7.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^3.5,<3.9|^4.0|^5.0",
+    "phpunit/phpunit": "^6.5|7.*|^8.4|^9.0"
   },
   "autoload": {
     "psr-4": {
       "MasterRO\\Searchable\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "MasterRO\\Searchable\\SearchableServiceProvider"
+      ]
     }
   }
 }

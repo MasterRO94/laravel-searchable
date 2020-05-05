@@ -1,241 +1,264 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MasterRO\Searchable;
 
-use DB;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 /**
- * Class Searchable
- * Simple fulltext search through Eloquent models
+ * Simple fulltext search through Eloquent models.
  *
- * @package App\Modules
+ * @package MasterRO\Searchable
  */
 class Searchable
 {
-	/**
-	 * @var Collection
-	 */
-	protected $total_results;
+    /**
+     * @var Collection
+     */
+    protected $totalResults;
 
-	/**
-	 * @var int
-	 */
-	protected $total = 0;
+    /**
+     * @var int
+     */
+    protected $total = 0;
 
-	/**
-	 * @var array
-	 */
-	protected static $models = [];
+    /**
+     * @var array
+     */
+    protected static $models = [];
 
-	/**
-	 * @var int
-	 */
-	protected $page;
+    /**
+     * @var int
+     */
+    protected $page;
 
-	/**
-	 * @var int
-	 */
-	protected $per_page = 15;
+    /**
+     * @var int
+     */
+    protected $perPage = 15;
 
-	/**
-	 * @var array
-	 */
-	protected $config;
+    /**
+     * @var array
+     */
+    protected $config;
 
-	/**
-	 * @var string
-	 */
-	protected $mode;
+    /**
+     * @var string
+     */
+    protected $mode;
 
+    /**
+     * Searchable constructor.
+     * Define configs and globals
+     */
+    public function __construct()
+    {
+        $this->init();
+    }
 
-	/**
-	 * Searchable constructor.
-	 * Define configs and globals
-	 */
-	public function __construct()
-	{
-		$this->config = config('searchable');
+    /**
+     * Gel collection of models that should be searched
+     *
+     * @return array
+     */
+    public static function searchable(): array
+    {
+        return static::$models;
+    }
 
-		$this->mode = $this->config['use_boolean_mode'] ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
+    /**
+     * @param array $models
+     */
+    public static function registerModels(array $models): void
+    {
+        static::$models = $models;
+    }
 
-		if (! $this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
-			$this->mode .= ' WITH QUERY EXPANSION';
-		}
-	}
+    /**
+     * Init
+     *
+     */
+    protected function init(): void
+    {
+        $this->config = config('searchable', []);
+        $this->config['use_boolean_mode'] = $this->config['use_boolean_mode'] ?? true;
+        $this->config['use_query_expansion'] = $this->config['use_query_expansion'] ?? true;
+        $this->config['allow_operators'] = $this->config['allow_operators'] ?? true;
 
+        $this->mode = $this->config['use_boolean_mode'] ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
 
-	/**
-	 * Gel collection of models that should be searched
-	 *
-	 * @return array
-	 */
-	public static function searchable(): array
-	{
-		return static::$models;
-	}
+        if (!$this->config['use_boolean_mode'] && $this->config['use_query_expansion']) {
+            $this->mode .= ' WITH QUERY EXPANSION';
+        }
+    }
 
+    /**
+     * Search
+     *
+     * @param string $query
+     * @param int $perPage
+     * @param Request|null $request
+     *
+     * @return LengthAwarePaginator
+     * @throws TooShortQueryException
+     */
+    public function search(string $query, int $perPage = 15, Request $request = null): LengthAwarePaginator
+    {
+        $request = $request ?? request();
 
-	/**
-	 * @param array $models
-	 */
-	public static function registerModels(array $models)
-	{
-		static::$models = $models;
-	}
+        $this->page = $request->input('page') ?? 1;
+        $this->perPage = $perPage;
+        $this->totalResults = collect();
+        $query = $this->clearQuery($query);
 
+        if (mb_strlen($query) < 3) {
+            throw new TooShortQueryException('Filtered search query must be at least 3 characters.');
+        }
 
-	/**
-	 * @param $q
-	 * @param int $per_page
-	 * @param null $request
-	 *
-	 * @return LengthAwarePaginator|Searchable
-	 * @throws TooShortQueryException
-	 */
-	public function search($q, $per_page = 15, $request = null)
-	{
-		$request = $request ?? request();
+        foreach (static::searchable() as $modelClass) {
+            $model = new $modelClass;
 
-		$this->page = $request->get('page') ?? 1;
-		$this->per_page = $per_page;
-		$q = $this->clearQuery($q);
+            if (!is_a($model, SearchableContract::class)) {
+                continue;
+            }
 
-		if (mb_strlen($q) < 3) {
-			throw new TooShortQueryException("Filtered search query must be at least 3 characters.");
-		}
+            $this->getResults(
+                $model,
+                $this->getQuery($model, $query)
+            );
+        }
 
-		foreach (static::searchable() as $model_class) {
-			$model = new $model_class;
+        if (1 === count(static::searchable())) {
+            return $this->totalResults;
+        }
 
-			if (! is_a($model, SearchableContract::class)) continue;
+        $this->totalResults = $this->totalResults
+            ->sortByDesc('score')
+            ->slice(($this->page - 1) * $perPage, $perPage);
 
-			$this->getResults(
-				$model,
-				$this->getQuery($model, $q)
-			);
-		}
+        return new LengthAwarePaginator($this->totalResults, $this->total, $perPage, $this->page);
+    }
 
-		$this->total_results = collect($this->total_results)
-			->sortByDesc('score')
-			->slice(($this->page - 1) * $per_page, $per_page);
+    /**
+     * Search Single Model
+     *
+     * @param $model
+     * @param string $query
+     * @param int $perPage
+     * @param Request|null $request
+     *
+     * @return LengthAwarePaginator
+     * @throws TooShortQueryException
+     */
+    public function searchModel($model, string $query, int $perPage = 15, Request $request = null)
+    {
+        $modelClass = is_string($model) ? $model : get_class($model);
 
-		return new LengthAwarePaginator($this->total_results, $this->total, $per_page, $this->page);
-	}
+        $registeredModels = static::searchable();
+        static::registerModels([$modelClass]);
 
+        $result = $this->search($query, $perPage, $request);
 
-	/**
-	 * @param $model
-	 * @param $query
-	 *
-	 * @return Searchable|Collection
-	 */
-	protected function getResults($model, $query)
-	{
-		$results = $query ? collect(DB::select($query))->map(function ($item) use ($model) {
-			return (new $model)->forceFill((array)$item);
-		}) : collect();
+        static::registerModels($registeredModels);
 
-		if ($results->count()) {
-			$this->total += $results->count();
-			$this->total_results = $results->merge($this->total_results);
-		}
+        return $result;
+    }
 
-		return $results;
-	}
+    /**
+     * Get Results
+     *
+     * @param Model $model
+     * @param Builder|null $query
+     *
+     * @return LengthAwarePaginator|Collection
+     */
+    protected function getResults(Model $model, ?Builder $query)
+    {
+        $results = $query
+            ? (1 === count(static::searchable())
+                ? $query->paginate($this->perPage)
+                : $query->get())
+            : collect();
 
+        if (1 !== count(static::searchable())) {
+            $this->total += $results->count();
+            $this->totalResults = $results->merge($this->totalResults);
+        } else {
+            $this->totalResults = $results;
+        }
 
-	/**
-	 * @param $model
-	 * @param $q
-	 *
-	 * @return string
-	 */
-	protected function getQuery($model, $q)
-	{
-		if (method_exists($model, 'getSearchQuery')) {
-			return $model->getSearchQuery($model, $q, $this->per_page);
-		}
+        return $results;
+    }
 
-		if (method_exists($model, 'filterSearchResults')) {
-			$ids = $model->filterSearchResults($model->query());
+    /**
+     * Get Query
+     *
+     * @param Model $model
+     * @param string $q
+     *
+     * @return Builder|null
+     */
+    protected function getQuery(Model $model, string $q): ?Builder
+    {
+        if (method_exists($model, 'getSearchQuery')) {
+            return $model->getSearchQuery($model, $q, $this->perPage);
+        }
 
-			if (! $ids) return false;
+        $fields = $model::searchable();
+        $fieldsStr = implode(', ', $fields);
 
-			if (! with($ids = $ids->pluck('id'))->count()) return false;
-		}
+        $builder = $model
+            ->selectRaw("*, MATCH ({$fieldsStr}) AGAINST ('*{$q}*' $this->mode) as score")
+            ->whereRaw("MATCH ({$fieldsStr}) AGAINST ('*{$q}*' $this->mode)")
+            ->orderBy('score', 'desc');
 
-		$fields = $model::searchable();
-		$fields_str = implode(', ', $fields);
+        if (method_exists($model, 'filterSearchResults')) {
+            $builder = $model->filterSearchResults($builder);
 
-		$sql = "SELECT *, 
-						MATCH ($fields_str) AGAINST ('$q' $this->mode) as score
-							FROM {$model->getTable()} 
-								WHERE MATCH ($fields_str) AGAINST ('$q' $this->mode)";
+            if (!$builder) {
+                return null;
+            }
+        }
 
-		if (isset($ids)) {
-			$sql = $this->addIdsFilter($ids, $sql);
-		}
+        if (1 === count(static::searchable())) {
+            return $builder;
+        }
 
-		$sql .= ' LIMIT ' . $this->per_page * count(self::$models);
+        return $builder->take($this->perPage * count(static::$models) * $this->page);
+    }
 
-		return $sql;
-	}
+    /**
+     * Clear Query
+     *
+     * @param $q
+     *
+     * @return string
+     */
+    protected function clearQuery($q): string
+    {
+        if ($this->config['use_boolean_mode'] && $this->config['allow_operators']) {
+            // Remove duplicate special chars
+            $q = preg_replace('/\-+/', '-', $q);
+            $q = preg_replace('/\++/', '+', $q);
+            $q = preg_replace('/\*+/', '*', $q);
 
+            //remove special chars
+            $q = preg_replace('/(((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s)|([\~\@\"\<\>\(\)])/', ' ', $q);
+        } else {
+            //remove special chars
+            $q = preg_replace('/[\+\-\"\<\>\(\)\~\*\@]/', ' ', $q);
+        }
 
-	/**
-	 * @param $ids
-	 * @param $sql
-	 *
-	 * @return string
-	 */
-	protected function addIdsFilter($ids, $sql): string
-	{
-		$first_loop = true;
-		$sql .= ' AND (id IN ';
-		foreach ($ids->chunk(100) as $idSet) {
-			$ids_str = implode(', ', $idSet->all());
-			if ($first_loop) {
-				$sql .= "($ids_str)";
-				$first_loop = false;
-				continue;
-			}
+        // remove duplicate spaces
+        $q = preg_replace('/\s+/', ' ', $q);
 
-			$sql .= " OR id IN ($ids_str)";
-		}
-		$sql .= ')';
+        $q = trim(trim($q, '*-+'));
 
-		return $sql;
-	}
-
-
-	/**
-	 * @param $q
-	 *
-	 * @return mixed
-	 */
-	protected function clearQuery($q)
-	{
-		if ($this->config['use_boolean_mode'] && $this->config['allow_operators']) {
-			// Remove duplicate special chars
-			$q = preg_replace('/\-+/', '-', $q);
-			$q = preg_replace('/\++/', '+', $q);
-			$q = preg_replace('/\*+/', '*', $q);
-
-			//remove special chars
-			$q = preg_replace('/(((\-|\+|\*)(\-|\+|\*)+)|(\-|\+)\s)|([\~\@\"\<\>\(\)])/', ' ', $q);
-		} else {
-			//remove special chars
-			$q = preg_replace('/[\+\-\"\<\>\(\)\~\*\@]/', ' ', $q);
-		}
-
-		// remove duplicate spaces
-		$q = preg_replace('/\s+/', ' ', $q);
-
-		$q = trim(trim($q, '*-+'));
-
-		return "*$q*";
-	}
-
+        return $q;
+    }
 }

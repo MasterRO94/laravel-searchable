@@ -41,7 +41,7 @@ Searchable::registerModels([
 		]);
 ```
 
-Then you should implement MasterRO\Searchable\SearchableContract by each registered model or it will be skipped and defined `searchable` method
+Then you should implement MasterRO\Searchable\SearchableContract by each registered model, or it will be skipped and define `searchable` method
 
 ```
 public static function searchable(): array
@@ -55,11 +55,11 @@ Now you can make search in your controller or where you want
 ```
 public function search(Request $request, Searchable $searchable)
 {
-    $query = trim($request->get('q'));
+    $query = trim($request->input('q'));
 
     if (mb_strlen($query) < 3) {
         return back()->withInput()->withErrors([
-            'search_error' => trans('messages.search_error')
+            'search_error' => __('messages.search_error')
         ]);
     }
     
