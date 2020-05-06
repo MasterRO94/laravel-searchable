@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MasterRO\Searchable;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -54,6 +55,16 @@ class Searchable
     protected $mode;
 
     /**
+     * @var Closure
+     */
+    protected $filter;
+
+    /**
+     * @var bool
+     */
+    protected $withoutFilters = [];
+
+    /**
      * Searchable constructor.
      * Define configs and globals
      */
@@ -99,6 +110,49 @@ class Searchable
     }
 
     /**
+     * With Filter
+     *
+     * @param Closure|null $filter
+     *
+     * @return Searchable
+     */
+    public function withFilter(?Closure $filter): Searchable
+    {
+        $this->filter = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Without Model Filters
+     *
+     * @param array|string|null $models
+     *
+     * @return $this
+     */
+    public function withoutModelFilters($models = null): Searchable
+    {
+        $models = $models ? Arr::wrap($models) : static::searchable();
+
+        $this->withoutFilters = $models;
+
+        return $this;
+    }
+
+    /**
+     * Clear Filters
+     *
+     * @return Searchable
+     */
+    public function clearFilters(): Searchable
+    {
+        $this->filter = null;
+        $this->withoutFilters = [];
+
+        return $this;
+    }
+
+    /**
      * Search
      *
      * @param string $query
@@ -133,6 +187,8 @@ class Searchable
                 $this->getQuery($model, $query)
             );
         }
+
+        $this->clearFilters();
 
         if ($this->totalResults instanceof LengthAwarePaginator) {
             return $this->totalResults;
@@ -223,8 +279,18 @@ class Searchable
             ->whereRaw("MATCH ({$fieldsStr}) AGAINST (? $this->mode)", ["*{$q}*"])
             ->orderBy('score', 'desc');
 
-        if (method_exists($model, 'filterSearchResults')) {
+        if (!in_array(get_class($model), $this->withoutFilters) &&
+            method_exists($model, 'filterSearchResults')
+        ) {
             $builder = $model->filterSearchResults($builder);
+
+            if (!$builder) {
+                return null;
+            }
+        }
+
+        if (!empty($this->filter)) {
+            $builder = call_user_func($this->filter, $builder);
 
             if (!$builder) {
                 return null;
