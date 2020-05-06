@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 /**
@@ -133,13 +134,14 @@ class Searchable
             );
         }
 
-        if (1 === count(static::searchable())) {
+        if ($this->totalResults instanceof LengthAwarePaginator) {
             return $this->totalResults;
         }
 
         $this->totalResults = $this->totalResults
             ->sortByDesc('score')
-            ->slice(($this->page - 1) * $perPage, $perPage);
+            ->slice(($this->page - 1) * $perPage, $perPage)
+            ->values();
 
         return new LengthAwarePaginator($this->totalResults, $this->total, $perPage, $this->page);
     }
@@ -147,7 +149,7 @@ class Searchable
     /**
      * Search Single Model
      *
-     * @param $model
+     * @param string|string[]|Model|Model[] $model
      * @param string $query
      * @param int $perPage
      * @param Request|null $request
@@ -157,10 +159,14 @@ class Searchable
      */
     public function searchModel($model, string $query, int $perPage = 15, Request $request = null)
     {
-        $modelClass = is_string($model) ? $model : get_class($model);
+        $models = collect(Arr::wrap($model))
+            ->map(function ($model) {
+                return is_string($model) ? $model : get_class($model);
+            })
+            ->all();
 
         $registeredModels = static::searchable();
-        static::registerModels([$modelClass]);
+        static::registerModels($models);
 
         $result = $this->search($query, $perPage, $request);
 
@@ -213,8 +219,8 @@ class Searchable
         $fieldsStr = implode(', ', $fields);
 
         $builder = $model
-            ->selectRaw("*, MATCH ({$fieldsStr}) AGAINST ('*{$q}*' $this->mode) as score")
-            ->whereRaw("MATCH ({$fieldsStr}) AGAINST ('*{$q}*' $this->mode)")
+            ->selectRaw("*, MATCH ({$fieldsStr}) AGAINST (? $this->mode) as score", ["*{$q}*"])
+            ->whereRaw("MATCH ({$fieldsStr}) AGAINST (? $this->mode)", ["*{$q}*"])
             ->orderBy('score', 'desc');
 
         if (method_exists($model, 'filterSearchResults')) {
