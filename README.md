@@ -94,6 +94,16 @@ public function search(Request $request, Searchable $searchable)
 }
 ```
 
+Runtime search model switching
+
+```php
+$result = $this->searchable->searchModel(Post::class, 'consequatur');
+```
+
+```php
+$result = $this->searchable->searchModel([Article::class, Post::class], 'consequatur');
+```
+
 ### Filtering
 
 #### Model filter
