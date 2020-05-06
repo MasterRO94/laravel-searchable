@@ -168,7 +168,7 @@ For preventing N+1 issue you can eager load relationships for search results
 ```php
 $result = $this->searchable
     ->with([Article::class => 'author'])
-    ->searchModel(Article::class, 'consequatur');
+    ->search('consequatur');
 ```
 
 ```php
