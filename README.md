@@ -1,5 +1,23 @@
+<p align="center">
+    <a href="https://packagist.org/packages/masterro/laravel-searchable">
+        <img src="https://poser.pugx.org/masterro/laravel-searchable/v/stable" alt="Latest Stable Version">
+    </a>
+    <a href="https://packagist.org/packages/masterro/laravel-searchable">
+        <img src="https://poser.pugx.org/masterro/laravel-searchable/downloads" alt="Total Downloads">
+    </a>
+    <a href="https://packagist.org/packages/masterro/laravel-searchable">
+        <img src="https://poser.pugx.org/masterro/laravel-searchable/v/unstable" alt="Latest Unstable Version">
+    </a>
+    <a href="https://travis-ci.org/MasterRO94/laravel-searchable">
+        <img src="https://travis-ci.org/MasterRO94/laravel-searchable.svg" alt="Build status">
+    </a>
+    <a href="https://github.com/MasterRO94/laravel-searchable/blob/master/LICENCE.txt">
+        <img src="https://poser.pugx.org/masterro/laravel-searchable/license" alt="License">
+    </a>
+</p>
+
 # Laravel simple FULLTEXT search through multiple Eloquent models 
-This is a small Laravel package that allows you to make a global search though multiple Eloquent models and get ordered by relevance collection of results.
+This is a small Laravel package allows you to make a global search though multiple Eloquent models and get ordered by relevance collection of results.
 It uses MATCH AGAINST MySQL queries.
 
 ## Installation
