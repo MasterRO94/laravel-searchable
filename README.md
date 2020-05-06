@@ -32,7 +32,7 @@ composer require masterro/laravel-searchable
 
 ### Step 2: Service Provider
 
-If you not use laravel package **auto-discovery** you need to register the service provider, open `config/app.php` and, within the `providers` array, append:
+If you do not use laravel package **auto-discovery** you need to register the service provider, open `config/app.php` and, within the `providers` array, append:
 
 ```php
 MasterRO\Searchable\SearchableServiceProvider::class
@@ -122,8 +122,8 @@ Search results can be filtered by adding custom filter callback
 $result = $this->searchable
     ->withFilter(function (Builder $query) {
         return $query->getModel() instanceof Post
-            ? $query
-            : $query->where('description', '!=', 'Doloremque iure sequi quos sequi consequatur.');
+            ? $query->where('description', '!=', 'Doloremque iure sequi quos sequi consequatur.')
+            : $query;
     })
     ->search('Dolorem');
 ```
