@@ -60,6 +60,11 @@ class Searchable
     protected $filter;
 
     /**
+     * @var array
+     */
+    protected $with = [];
+
+    /**
      * @var bool
      */
     protected $withoutFilters = [];
@@ -140,14 +145,29 @@ class Searchable
     }
 
     /**
+     * With
+     *
+     * @param array $with
+     *
+     * @return Searchable
+     */
+    public function with(array $with = []): Searchable
+    {
+        $this->with = $with;
+
+        return $this;
+    }
+
+    /**
      * Clear Filters
      *
      * @return Searchable
      */
-    public function clearFilters(): Searchable
+    public function clearExtras(): Searchable
     {
         $this->filter = null;
         $this->withoutFilters = [];
+        $this->with = [];
 
         return $this;
     }
@@ -188,7 +208,7 @@ class Searchable
             );
         }
 
-        $this->clearFilters();
+        $this->clearExtras();
 
         if ($this->totalResults instanceof LengthAwarePaginator) {
             return $this->totalResults;
@@ -278,6 +298,10 @@ class Searchable
             ->selectRaw("*, MATCH ({$fieldsStr}) AGAINST (? $this->mode) as score", ["*{$q}*"])
             ->whereRaw("MATCH ({$fieldsStr}) AGAINST (? $this->mode)", ["*{$q}*"])
             ->orderBy('score', 'desc');
+
+        if (!empty($this->with[get_class($model)])) {
+            $builder->with($this->with[get_class($model)]);
+        }
 
         if (!in_array(get_class($model), $this->withoutFilters) &&
             method_exists($model, 'filterSearchResults')

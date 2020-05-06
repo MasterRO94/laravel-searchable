@@ -178,6 +178,23 @@ class SearchableTest extends TestCase
     }
 
     /**
+     * @test
+     */
+    public function it_can_eager_load_relations()
+    {
+        $result = $this->searchable
+            ->with([Article::class => 'author'])
+            ->searchModel(Article::class, 'consequatur');
+
+        $this->assertTrue($result->first()->relationLoaded('author'));
+
+        $result = $this->searchable
+            ->searchModel(Article::class, 'consequatur');
+
+        $this->assertFalse($result->first()->relationLoaded('author'));
+    }
+
+    /**
      * Get Package Providers
      *
      * @param \Illuminate\Foundation\Application $app

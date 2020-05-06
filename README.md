@@ -160,3 +160,21 @@ $result = $this->searchable
     ->withoutModelFilters([Article::class, Post::class])
     ->search('quia est ipsa molestiae hic');
 ```
+
+### Eager load (N+1 issue)
+
+For preventing N+1 issue you can eager load relationships for search results 
+
+```php
+$result = $this->searchable
+    ->with([Article::class => 'author'])
+    ->searchModel(Article::class, 'consequatur');
+```
+
+```php
+$result = $this->searchable
+    ->with([Article::class => ['author.profile' => function($query) {
+        return $query->whereActive(true);
+    }]])
+    ->searchModel(Article::class, 'consequatur');
+```
