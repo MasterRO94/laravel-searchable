@@ -192,6 +192,18 @@ class SearchableTest extends TestCase
             ->searchModel(Article::class, 'consequatur');
 
         $this->assertFalse($result->first()->relationLoaded('author'));
+
+        $result = $this->searchable
+            ->with([
+                Article::class => [
+                    'author' => function ($query) {
+                        return $query->where('id', '>', 1);
+                    },
+                ],
+            ])
+            ->searchModel(Article::class, 'consequatur');
+
+        $this->assertTrue($result->first()->relationLoaded('author'));
     }
 
     /**

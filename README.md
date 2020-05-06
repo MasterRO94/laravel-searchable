@@ -173,8 +173,12 @@ $result = $this->searchable
 
 ```php
 $result = $this->searchable
-    ->with([Article::class => ['author.profile' => function($query) {
-        return $query->whereActive(true);
-    }]])
+    ->with([
+        Article::class => [
+            'author' => function ($query) {
+                return $query->where('active', true);
+            },
+        ],
+    ])
     ->searchModel(Article::class, 'consequatur');
 ```
