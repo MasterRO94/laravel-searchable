@@ -22,7 +22,8 @@
   },
   "require-dev": {
     "orchestra/testbench": "^v5.0|^v6.0",
-    "nesbot/carbon": "^2.27"
+    "nesbot/carbon": "^2.27",
+    "fzaninotto/faker": "^v1.9"
   },
   "autoload": {
     "psr-4": {
