@@ -5,8 +5,8 @@
     <a href="https://packagist.org/packages/masterro/laravel-searchable">
         <img src="https://poser.pugx.org/masterro/laravel-searchable/downloads" alt="Total Downloads">
     </a>
-    <a href="https://packagist.org/packages/masterro/laravel-searchable">
-        <img src="https://poser.pugx.org/masterro/laravel-searchable/v/unstable" alt="Latest Unstable Version">
+    <a href="https://github.com/MasterRO94/laravel-searchable/actions">
+        <img src="https://github.com/MasterRO94/laravel-searchable/workflows/Tests/badge.svg" alt="Build Status">
     </a>
     <a href="https://travis-ci.org/MasterRO94/laravel-searchable">
         <img src="https://travis-ci.org/MasterRO94/laravel-searchable.svg" alt="Build status">
