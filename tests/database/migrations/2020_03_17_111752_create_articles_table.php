@@ -14,11 +14,11 @@ class CreateArticlesTable extends Migration
     public function up()
     {
         Schema::create('articles', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
 
             $table->string('title');
             $table->longText('description');
-            $table->foreignId('created_by');
+            $table->unsignedBigInteger('created_by');
 
             $table->foreign('created_by')
                 ->references('id')
