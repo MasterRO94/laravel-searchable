@@ -25,7 +25,7 @@ jobs:
       matrix:
         php: [ 7.2, 7.3, 7.4, 8.0 ]
         stability: [ prefer-lowest, prefer-stable ]
-        laravel: [6.*, 7.*, 8.*]
+        laravel: [ 6.*, 7.*, 8.* ]
         include:
           - laravel: 6.*
             testbench: 5.*
@@ -52,8 +52,8 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
 
-      - name: Install legacy factories ofr Laravel 8
-        if: ${{ matrix.laravel == 8.* }}
+      - name: Install legacy factories for Laravel 8
+        if: ${{ matrix.laravel == '8.*' }}
         run: |
           composer require laravel/legacy-factories --dev --prefer-dist --no-interaction --no-progress --update-with-all-dependencies
 
