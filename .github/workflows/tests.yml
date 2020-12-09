@@ -70,6 +70,11 @@ jobs:
       - name: Bump mockery for PHP 8
         if: ${{ matrix.php == 8.0 }}
         run: |
+          composer require mockery/mockery:^1.4.2 --dev --prefer-dist --no-interaction --no-progress --update-with-all-dependencies
+
+      - name: Install fakerphp/faker:^v1.10.0 for PHP 8
+        if: ${{ matrix.php == 8.0 && matrix.stability !== 'prefer-lowest' }}
+        run: |
           composer require mockery/mockery:^1.4.2 fakerphp/faker:^v1.10.0 --dev --prefer-dist --no-interaction --no-progress --update-with-all-dependencies
 
       - name: Execute tests
