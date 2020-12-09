@@ -25,8 +25,16 @@ jobs:
       matrix:
         php: [ 7.2, 7.3, 7.4, 8.0 ]
         stability: [ prefer-lowest, prefer-stable ]
+        laravel: [6.*, 7.*, 8.*]
+        include:
+          - laravel: 6.*
+            testbench: 5.*
+          - laravel: 7.*
+            testbench: 6.*
+          - laravel: 8.*
+            testbench: 8.*
 
-    name: PHP ${{ matrix.php }} - ${{ matrix.stability }}
+    name: PHP ${{ matrix.php }}- L${{ matrix.laravel }} - ${{ matrix.stability }}
 
     steps:
       - name: Checkout code
@@ -40,7 +48,14 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
+
+      - name: Install legacy factories ofr Laravel 8
+        if: ${{ matrix.laravel == 8.* }}
+        run: |
+          composer require laravel/legacy-factories --dev --prefer-dist --no-interaction --no-progress --update-with-all-dependencies
 
       - name: Execute tests
         run: vendor/bin/phpunit --verbose
